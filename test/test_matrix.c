@@ -10,7 +10,19 @@ void setUp(void)
 
 void tearDown(void)
 {
+    mterrno = 0;
+}
 
+void test_mtalloc_failure(void)
+{
+    TEST_ASSERT_NULL(mtalloc(-1, 1));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_ALLOC, mterrno);
+}
+
+void test_mtfree_failure(void)
+{
+    mtfree(NULL);
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_NULL_MATRIX, mterrno);
 }
 
 void test_mtsave_mtload(void)
@@ -31,7 +43,8 @@ void test_mtsave_mtload(void)
     mtfree(loaded);
 }
 
-void test_mtadd_valid(void) {
+void test_mtadd_valid(void)
+{
     Matrix *p = FILL(mtalloc(2, 2), 1, 2, 3, 4);
     Matrix *q = FILL(mtalloc(2, 2), 5, 6, 7, 8);
     Matrix *dest = mtalloc(2, 2);
@@ -48,7 +61,8 @@ void test_mtadd_valid(void) {
     mtfree(dest);
 }
 
-void test_mtsubtract_valid(void) {
+void test_mtsubtract_valid(void)
+{
     Matrix *p = FILL(mtalloc(2, 2), 1.0, 2.0, 3.0, 4.0);
     Matrix *q = FILL(mtalloc(2, 2), 5.0, 6.0, 7.0, 7.0);
     Matrix *dest = mtalloc(2, 2);
@@ -65,7 +79,8 @@ void test_mtsubtract_valid(void) {
     mtfree(dest);
 }
 
-void test_mtelmult_valid(void) {
+void test_mtelmult_valid(void)
+{
     Matrix *p = FILL(mtalloc(2, 2), 1, 2, 3, 4);
     Matrix *q = FILL(mtalloc(2, 2), 5, 6, 7, 8);
     Matrix *dest = mtalloc(2, 2);
@@ -82,12 +97,94 @@ void test_mtelmult_valid(void) {
     mtfree(dest);
 }
 
+void test_mtadd_intcompatible(void) 
+{
+    Matrix *p = mtalloc(1, 2);
+    Matrix *q = mtalloc(2, 2);
+    Matrix *dest = mtalloc(2, 4);
+
+    TEST_ASSERT_NULL(mtadd(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+    mterrno = 0;
+    mtfree(p);
+    mtfree(q);
+    p = mtalloc(2, 2);
+    q = mtalloc(2, 1);
+    TEST_ASSERT_NULL(mtadd(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+    mterrno = 0;
+    mtfree(q);
+    q = mtalloc(2, 2);
+    TEST_ASSERT_NULL(mtadd(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+
+    mtfree(p);
+    mtfree(q);
+    mtfree(dest);
+}
+
+void test_mtsubtract_incompatible(void) 
+{
+    Matrix *p = mtalloc(1, 2);
+    Matrix *q = mtalloc(2, 2);
+    Matrix *dest = mtalloc(2, 4);
+
+    TEST_ASSERT_NULL(mtsubtract(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+    mterrno = 0;
+    mtfree(p);
+    mtfree(q);
+    p = mtalloc(2, 2);
+    q = mtalloc(2, 1);
+    TEST_ASSERT_NULL(mtsubtract(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+    mterrno = 0;
+    mtfree(q);
+    q = mtalloc(2, 2);
+    TEST_ASSERT_NULL(mtsubtract(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+
+    mtfree(p);
+    mtfree(q);
+    mtfree(dest);
+}
+
+void test_mtelmult_incompatible(void) {
+    Matrix *p = mtalloc(1, 2);
+    Matrix *q = mtalloc(2, 2);
+    Matrix *dest = mtalloc(2, 4);
+
+    TEST_ASSERT_NULL(mtelmult(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+    mterrno = 0;
+    mtfree(p);
+    mtfree(q);
+    p = mtalloc(2, 2);
+    q = mtalloc(2, 1);
+    TEST_ASSERT_NULL(mtelmult(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+    mterrno = 0;
+    mtfree(q);
+    q = mtalloc(2, 2);
+    TEST_ASSERT_NULL(mtelmult(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+
+    mtfree(p);
+    mtfree(q);
+    mtfree(dest);
+}
+
 int main()
 {
     UNITY_BEGIN();
+    RUN_TEST(test_mtalloc_failure);
+    RUN_TEST(test_mtfree_failure);
     RUN_TEST(test_mtsave_mtload);
     RUN_TEST(test_mtadd_valid);
     RUN_TEST(test_mtsubtract_valid);
     RUN_TEST(test_mtelmult_valid);
+    RUN_TEST(test_mtadd_intcompatible);
+    RUN_TEST(test_mtsubtract_incompatible);
+    RUN_TEST(test_mtelmult_incompatible);
     return UNITY_END();
 }
