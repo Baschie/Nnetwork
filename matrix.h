@@ -14,3 +14,7 @@ typedef struct {
 Matrix *mtalloc(int row, int col);
 void mtfree(Matrix *p);
 int mtsave(Matrix *p, const char *path);
+Matrix *mtload(const char *path);
+Matrix *mtadd(Matrix *p, Matrix *q, Matrix *dest);
+Matrix *mtsubtract(Matrix *p, Matrix *q, Matrix *dest);
+Matrix *mtelmult(Matrix *p, Matrix *q, Matrix *dest); /* Element wise matrix multiplication */

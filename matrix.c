@@ -76,3 +76,54 @@ Matrix *mtload(const char *path)
     mtfree(p);
     return NULL;
 }
+
+Matrix *mtadd(Matrix *p, Matrix *q, Matrix *dest)
+{
+    if (p->row != q->row || p->col != q->col) {
+        fprintf(stderr, "%s(%p, %p, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, p->row, p->col, q->row, q->col);
+        exit(EXIT_FAILURE);
+    }
+
+    if (p->row != dest->row || p->col != dest->col) {
+        fprintf(stderr, "%s(%p, %p, %p): Incompatible destination (%d, %d) for matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, dest->row, dest->col, p->row, p->col, q->row, q->col);
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < p->row * p->col; i++)
+        dest->entries[i] = p->entries[i] + q->entries[i];
+    return dest;
+}
+
+Matrix *mtsubtract(Matrix *p, Matrix *q, Matrix *dest)
+{
+    if (p->row != q->row || p->col != q->col) {
+        fprintf(stderr, "%s(%p, %p, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, p->row, p->col, q->row, q->col);
+        exit(EXIT_FAILURE);
+    }
+
+    if (p->row != dest->row || p->col != dest->col) {
+        fprintf(stderr, "%s(%p, %p, %p): Incompatible destination (%d, %d) for matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, dest->row, dest->col, p->row, p->col, q->row, q->col);
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < p->row * p->col; i++)
+        dest->entries[i] = p->entries[i] - q->entries[i];
+    return dest;
+}
+
+Matrix *mtelmult(Matrix *p, Matrix *q, Matrix *dest)
+{
+    if (p->row != q->row || p->col != q->col) {
+        fprintf(stderr, "%s(%p, %p, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, p->row, p->col, q->row, q->col);
+        exit(EXIT_FAILURE);
+    }
+
+    if (p->row != dest->row || p->col != dest->col) {
+        fprintf(stderr, "%s(%p, %p, %p): Incompatible destination (%d, %d) for matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, dest->row, dest->col, p->row, p->col, q->row, q->col);
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < p->row * p->col; i++)
+        dest->entries[i] = p->entries[i] * q->entries[i];
+    return dest;
+}
