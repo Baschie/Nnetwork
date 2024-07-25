@@ -13,3 +13,5 @@ typedef struct {
 
 Matrix *mtalloc(int row, int col);
 void mtfree(Matrix *p);
+int mtsave(Matrix *p, const char *path);
+Matrix *mtload(const char *path);
