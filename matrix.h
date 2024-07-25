@@ -2,8 +2,8 @@
 #include <string.h>
 
 #define ENTRY(mat, i, j) mat->entries[mat->col * i + j]
-#define FILL(mat, ...) ({memcpy(mat->entries, (double []) {__VA_ARGS__}, \
-	sizeof((double []) {__VA_ARGS__})/sizeof(double)); mat}) 
+#define FILL(mat, ...) ({Matrix *_mat = mat; memcpy(_mat->entries, (double []) {__VA_ARGS__}, \
+	sizeof((double []) {__VA_ARGS__})); _mat;}) 
 
 typedef struct {
 	int row;
