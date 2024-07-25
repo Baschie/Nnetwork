@@ -2,19 +2,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdint.h>
+
+uint32_t mterrno;
 
 Matrix *mtalloc(int row, int col)
 {
     Matrix *p = malloc(sizeof(Matrix));
 
-    if (p == NULL) {
+    if (p == NULL || (p->entries = malloc(sizeof(double) * row * col)) == NULL) {
         fprintf(stderr, "mtalloc(%d, %d): malloc returned NULL\n", row, col);
-        exit(EXIT_FAILURE);
+        mterrno |= MT_ERR_ALLOC;
     }
 
     p->row = row;
     p->col = col;
-    p->entries = malloc(sizeof(double) * row * col);
     return p;
 }
 
@@ -22,7 +24,7 @@ void mtfree(Matrix *p)
 {
     if (p == NULL) {
         fprintf(stderr, "mtfree: freeing NULL Matrix attempted\n");
-        exit(EXIT_FAILURE);
+        mterrno |= MT_ERR_NULL_MATRIX;
     }
 
     free(p->entries);
@@ -81,12 +83,12 @@ Matrix *mtadd(Matrix *p, Matrix *q, Matrix *dest)
 {
     if (p->row != q->row || p->col != q->col) {
         fprintf(stderr, "%s(%p, %p, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, p->row, p->col, q->row, q->col);
-        exit(EXIT_FAILURE);
+        mterrno |= MT_ERR_INCOMPATIBLE;
     }
 
     if (p->row != dest->row || p->col != dest->col) {
         fprintf(stderr, "%s(%p, %p, %p): Incompatible destination (%d, %d) for matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, dest->row, dest->col, p->row, p->col, q->row, q->col);
-        exit(EXIT_FAILURE);
+        mterrno |= MT_ERR_INCOMPATIBLE;
     }
 
     for (int i = 0; i < p->row * p->col; i++)
@@ -98,12 +100,12 @@ Matrix *mtsubtract(Matrix *p, Matrix *q, Matrix *dest)
 {
     if (p->row != q->row || p->col != q->col) {
         fprintf(stderr, "%s(%p, %p, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, p->row, p->col, q->row, q->col);
-        exit(EXIT_FAILURE);
+        mterrno |= MT_ERR_INCOMPATIBLE;
     }
 
     if (p->row != dest->row || p->col != dest->col) {
         fprintf(stderr, "%s(%p, %p, %p): Incompatible destination (%d, %d) for matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, dest->row, dest->col, p->row, p->col, q->row, q->col);
-        exit(EXIT_FAILURE);
+        mterrno |= MT_ERR_INCOMPATIBLE;
     }
 
     for (int i = 0; i < p->row * p->col; i++)
@@ -115,12 +117,12 @@ Matrix *mtelmult(Matrix *p, Matrix *q, Matrix *dest)
 {
     if (p->row != q->row || p->col != q->col) {
         fprintf(stderr, "%s(%p, %p, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, p->row, p->col, q->row, q->col);
-        exit(EXIT_FAILURE);
+        mterrno |= MT_ERR_INCOMPATIBLE;
     }
 
     if (p->row != dest->row || p->col != dest->col) {
         fprintf(stderr, "%s(%p, %p, %p): Incompatible destination (%d, %d) for matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, dest->row, dest->col, p->row, p->col, q->row, q->col);
-        exit(EXIT_FAILURE);
+        mterrno |= MT_ERR_INCOMPATIBLE;
     }
 
     for (int i = 0; i < p->row * p->col; i++)
