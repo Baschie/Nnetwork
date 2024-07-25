@@ -26,3 +26,6 @@ Matrix *mtload(const char *path);
 Matrix *mtadd(Matrix *p, Matrix *q, Matrix *dest);
 Matrix *mtsubtract(Matrix *p, Matrix *q, Matrix *dest);
 Matrix *mtelmult(Matrix *p, Matrix *q, Matrix *dest); /* Element wise matrix multiplication */
+Matrix *mtscale(Matrix *p, double scaler, Matrix *dest);
+Matrix *mtdivide(Matrix *p, double divisor, Matrix *dest);
+Matrix *mtapply(Matrix *p, double (*func)(double), Matrix *dest);

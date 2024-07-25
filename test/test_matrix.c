@@ -174,6 +174,94 @@ void test_mtelmult_incompatible(void) {
     mtfree(dest);
 }
 
+void test_mtscale_valid(void)
+{
+    Matrix *p = FILL(mtalloc(2, 2), 1.0, 2.0, 3.0, 4.0);
+    Matrix *dest = mtalloc(2, 2);
+
+    mtscale(p, 2.0, dest);
+
+    TEST_ASSERT_EQUAL_DOUBLE(2.0, dest->entries[0]);
+    TEST_ASSERT_EQUAL_DOUBLE(4.0, dest->entries[1]);
+    TEST_ASSERT_EQUAL_DOUBLE(6.0, dest->entries[2]);
+    TEST_ASSERT_EQUAL_DOUBLE(8.0, dest->entries[3]);
+
+    mtfree(p);
+    mtfree(dest);
+}
+
+void test_mtscale_incompatible(void)
+{
+    Matrix *p = mtalloc(2, 2);
+    Matrix *dest = mtalloc(3, 3);
+
+    TEST_ASSERT_NULL(mtscale(p, 2.0, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+
+    mtfree(p);
+    mtfree(dest);
+}
+
+void test_mtdivide_valid(void)
+{
+    Matrix *p = FILL(mtalloc(2, 2), 2.0, 4.0, 6.0, 8.0);
+    Matrix *dest = mtalloc(2, 2);
+
+    mtdivide(p, 2.0, dest);
+
+    TEST_ASSERT_EQUAL_DOUBLE(1.0, dest->entries[0]);
+    TEST_ASSERT_EQUAL_DOUBLE(2.0, dest->entries[1]);
+    TEST_ASSERT_EQUAL_DOUBLE(3.0, dest->entries[2]);
+    TEST_ASSERT_EQUAL_DOUBLE(4.0, dest->entries[3]);
+
+    mtfree(p);
+    mtfree(dest);
+}
+
+void test_mtdivide_incompatible(void)
+{
+    Matrix *p = mtalloc(2, 2);
+    Matrix *dest = mtalloc(3, 3);
+
+    TEST_ASSERT_NULL(mtdivide(p, 2.0, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+
+    mtfree(p);
+    mtfree(dest);
+}
+
+double example_func(double x) {
+    return x * x;
+}
+
+void test_mtapply_valid(void)
+{
+    Matrix *p = FILL(mtalloc(2, 2), 1.0, 2.0, 3.0, 4.0);
+    Matrix *dest = mtalloc(2, 2);
+
+    mtapply(p, example_func, dest);
+
+    TEST_ASSERT_EQUAL_DOUBLE(1.0, dest->entries[0]);
+    TEST_ASSERT_EQUAL_DOUBLE(4.0, dest->entries[1]);
+    TEST_ASSERT_EQUAL_DOUBLE(9.0, dest->entries[2]);
+    TEST_ASSERT_EQUAL_DOUBLE(16.0, dest->entries[3]);
+
+    mtfree(p);
+    mtfree(dest);
+}
+
+void test_mtapply_incompatible(void)
+{
+    Matrix *p = mtalloc(2, 2);
+    Matrix *dest = mtalloc(3, 3);
+
+    TEST_ASSERT_NULL(mtapply(p, example_func, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+
+    mtfree(p);
+    mtfree(dest);
+}
+
 int main()
 {
     UNITY_BEGIN();
@@ -186,5 +274,11 @@ int main()
     RUN_TEST(test_mtadd_intcompatible);
     RUN_TEST(test_mtsubtract_incompatible);
     RUN_TEST(test_mtelmult_incompatible);
+    RUN_TEST(test_mtscale_valid);
+    RUN_TEST(test_mtscale_incompatible);
+    RUN_TEST(test_mtdivide_valid);
+    RUN_TEST(test_mtdivide_incompatible);
+    RUN_TEST(test_mtapply_valid);
+    RUN_TEST(test_mtapply_incompatible);
     return UNITY_END();
 }

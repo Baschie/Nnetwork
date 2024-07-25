@@ -138,3 +138,42 @@ Matrix *mtelmult(Matrix *p, Matrix *q, Matrix *dest)
         dest->entries[i] = p->entries[i] * q->entries[i];
     return dest;
 }
+
+Matrix *mtscale(Matrix *p, double scaler, Matrix *dest)
+{
+    if (p->row != dest->row || p->col != dest->col) {
+        fprintf(stderr, "%s(%p, %lf, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, scaler, dest, p->row, p->col, dest->row, dest->col);
+        mterrno |= MT_ERR_INCOMPATIBLE;
+        return NULL;
+    }
+
+    for (int i = 0; i < p->row * p->col; i++)
+        dest->entries[i] = p->entries[i] * scaler;
+    return dest;
+}
+
+Matrix *mtdivide(Matrix *p, double divisor, Matrix *dest)
+{
+    if (p->row != dest->row || p->col != dest->col) {
+        fprintf(stderr, "%s(%p, %lf, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, divisor, dest, p->row, p->col, dest->row, dest->col);
+        mterrno |= MT_ERR_INCOMPATIBLE;
+        return NULL;
+    }
+
+    for (int i = 0; i < p->row * p->col; i++)
+        dest->entries[i] = p->entries[i] / divisor;
+    return dest; 
+}
+
+Matrix *mtapply(Matrix *p, double (*func)(double), Matrix *dest)
+{
+    if (p->row != dest->row || p->col != dest->col) {
+        fprintf(stderr, "%s(%p, %p, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, func, dest, p->row, p->col, dest->row, dest->col);
+        mterrno |= MT_ERR_INCOMPATIBLE;
+        return NULL;
+    }
+
+    for (int i = 0; i < p->row * p->col; i++)
+        dest->entries[i] = func(p->entries[i]);
+    return dest;
+}
