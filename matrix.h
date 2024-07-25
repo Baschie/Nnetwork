@@ -1,5 +1,6 @@
 #pragma once
 #include <string.h>
+#include <stdint.h>
 
 #define ENTRY(mat, i, j) mat->entries[mat->col * i + j]
 #define FILL(mat, ...) ({Matrix *_mat = mat; memcpy(_mat->entries, (double []) {__VA_ARGS__}, \
