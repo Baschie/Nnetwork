@@ -262,6 +262,76 @@ void test_mtapply_incompatible(void)
     mtfree(dest);
 }
 
+void test_mtmult_valid(void)
+{
+    Matrix *p = FILL(mtalloc(2, 3), 1, 2, 3, 4, 5, 6);
+    Matrix *q = FILL(mtalloc(3, 2), 7, 8, 9, 10, 11, 12);
+    Matrix *dest = mtalloc(2, 2);
+
+    mtmult(p, q, dest);
+
+    TEST_ASSERT_EQUAL_DOUBLE(58.0, dest->entries[0]);
+    TEST_ASSERT_EQUAL_DOUBLE(64.0, dest->entries[1]);
+    TEST_ASSERT_EQUAL_DOUBLE(139.0, dest->entries[2]);
+    TEST_ASSERT_EQUAL_DOUBLE(154.0, dest->entries[3]);
+    TEST_ASSERT_EQUAL_UINT32(0, mterrno);
+
+    mtfree(p);
+    mtfree(q);
+    mtfree(dest);
+}
+
+void test_mtmult_incompatible_matrices(void)
+{
+    Matrix *p = mtalloc(2, 2);
+    Matrix *q = mtalloc(3, 3);
+    Matrix *dest = mtalloc(2, 3);
+
+    TEST_ASSERT_NULL(mtmult(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+
+    mtfree(p);
+    mtfree(q);
+    mtfree(dest);
+}
+
+void test_mtmult_incompatible_dest(void)
+{
+    Matrix *p = mtalloc(2, 2);
+    Matrix *q = mtalloc(2, 2);
+    Matrix *dest = mtalloc(3, 3);
+
+    TEST_ASSERT_NULL(mtmult(p, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+
+    mtfree(p);
+    mtfree(q);
+    mtfree(dest);
+}
+
+void test_mtmult_null(void)
+{
+    Matrix *p = mtalloc(2, 2);
+    Matrix *q = mtalloc(2, 2);
+    Matrix *dest = mtalloc(2, 2);
+
+    TEST_ASSERT_NULL(mtmult(NULL, q, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_NULL_MATRIX, mterrno);
+    mterrno = 0;
+    TEST_ASSERT_NULL(mtmult(p, NULL, dest));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_NULL_MATRIX, mterrno);
+    mterrno = 0;
+    TEST_ASSERT_NULL(mtmult(p, q, NULL));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_NULL_MATRIX, mterrno);
+    mterrno = 0;
+    TEST_ASSERT_NULL(mtmult(NULL, NULL, NULL));
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_NULL_MATRIX, mterrno);
+    
+    mtfree(p);
+    mtfree(q);
+    mtfree(dest);
+}
+
 int main()
 {
     UNITY_BEGIN();
@@ -280,5 +350,6 @@ int main()
     RUN_TEST(test_mtdivide_incompatible);
     RUN_TEST(test_mtapply_valid);
     RUN_TEST(test_mtapply_incompatible);
+    RUN_TEST(test_mtmult_null);
     return UNITY_END();
 }

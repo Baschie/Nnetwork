@@ -177,3 +177,34 @@ Matrix *mtapply(Matrix *p, double (*func)(double), Matrix *dest)
         dest->entries[i] = func(p->entries[i]);
     return dest;
 }
+
+Matrix *mtmult(Matrix *p, Matrix *q, Matrix *dest)
+{
+    if (p == NULL || q == NULL || dest == NULL) {
+        fprintf(stderr, "%s(%p, %p, %p): One or more matrices are NULL\n", __func__, p, q, dest);
+        mterrno |= MT_ERR_NULL_MATRIX;
+        return NULL;
+    }
+
+    if (p->col != q->row) {
+        fprintf(stderr, "%s(%p, %p, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, p->row, p->col, q->row, q->col);
+        mterrno |= MT_ERR_INCOMPATIBLE;
+        return NULL;
+    }
+
+    if (p->row != dest->row || q->col != dest->col) {
+        fprintf(stderr, "%s(%p, %p, %p): Incompatible destination (%d, %d) for matrices (%d, %d) and (%d, %d)\n", __func__, p, q, dest, dest->row, dest->col, p->row, p->col, q->row, q->col);
+        mterrno |= MT_ERR_INCOMPATIBLE;
+        return NULL;
+    }
+
+    for (int i = 0; i < p->row; i++) {
+        for (int j = 0; j < q->col; j++) {
+            ENTRY(dest, i, j) = 0;
+            for (int k = 0; k < p->col; k++) {
+                ENTRY(dest, i, j) += ENTRY(p, i, k) * ENTRY(q, k, j);
+            }
+        }
+    }
+    return dest;
+}
