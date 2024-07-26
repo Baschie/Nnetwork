@@ -208,3 +208,17 @@ Matrix *mtmult(Matrix *p, Matrix *q, Matrix *dest)
     }
     return dest;
 }
+
+Matrix *mttranspose(Matrix *p, Matrix *dest)
+{
+    if (p->row != dest->col || p->col != dest->row) {
+        fprintf(stderr, "%s(%p, %p): Incompatible matrices (%d, %d) and (%d, %d)\n", __func__, p, dest, p->row, p->col, dest->row, dest->col);
+        mterrno |= MT_ERR_INCOMPATIBLE;
+        return NULL;
+    }
+
+    for (int i = 0; i < p->row; i++)
+        for (int j = 0; j < p->col; j++)
+            ENTRY(dest, j, i) = ENTRY(p, i, j);
+    return dest;
+}

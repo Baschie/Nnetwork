@@ -30,3 +30,4 @@ Matrix *mtscale(Matrix *p, double scaler, Matrix *dest);
 Matrix *mtdivide(Matrix *p, double divisor, Matrix *dest);
 Matrix *mtapply(Matrix *p, double (*func)(double), Matrix *dest);
 Matrix *mtmult(Matrix *p, Matrix *q, Matrix *dest);
+Matrix *mttranspose(Matrix *p, Matrix *dest);

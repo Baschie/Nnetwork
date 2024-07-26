@@ -332,6 +332,70 @@ void test_mtmult_null(void)
     mtfree(dest);
 }
 
+void test_mttranspose_valid(void)
+{
+    Matrix *p = FILL(mtalloc(2, 3), 1, 2, 3, 4, 5, 6);
+    Matrix *dest = mtalloc(3, 2);
+
+    Matrix *result = mttranspose(p, dest);
+
+    TEST_ASSERT_NOT_NULL(result);
+    TEST_ASSERT_EQUAL_DOUBLE(1.0, ENTRY(dest, 0, 0));
+    TEST_ASSERT_EQUAL_DOUBLE(4.0, ENTRY(dest, 0, 1));
+    TEST_ASSERT_EQUAL_DOUBLE(2.0, ENTRY(dest, 1, 0));
+    TEST_ASSERT_EQUAL_DOUBLE(5.0, ENTRY(dest, 1, 1));
+    TEST_ASSERT_EQUAL_DOUBLE(3.0, ENTRY(dest, 2, 0));
+    TEST_ASSERT_EQUAL_DOUBLE(6.0, ENTRY(dest, 2, 1));
+
+    mtfree(p);
+    mtfree(dest);
+}
+
+void test_mttranspose_incompatible(void)
+{
+    Matrix *p = FILL(mtalloc(2, 3), 1, 2, 3, 4, 5, 6);
+    Matrix *dest = mtalloc(2, 2); // Incompatible dimensions for transpose
+
+    Matrix *result = mttranspose(p, dest);
+
+    TEST_ASSERT_NULL(result);
+    TEST_ASSERT_EQUAL_UINT32(MT_ERR_INCOMPATIBLE, mterrno);
+
+    mtfree(p);
+    mtfree(dest);
+}
+
+void test_mttranspose_square_matrix(void)
+{
+    Matrix *p = FILL(mtalloc(2, 2), 1, 2, 3, 4);
+    Matrix *dest = mtalloc(2, 2);
+
+    Matrix *result = mttranspose(p, dest);
+
+    TEST_ASSERT_NOT_NULL(result);
+    TEST_ASSERT_EQUAL_DOUBLE(1.0, ENTRY(dest, 0, 0));
+    TEST_ASSERT_EQUAL_DOUBLE(3.0, ENTRY(dest, 0, 1));
+    TEST_ASSERT_EQUAL_DOUBLE(2.0, ENTRY(dest, 1, 0));
+    TEST_ASSERT_EQUAL_DOUBLE(4.0, ENTRY(dest, 1, 1));
+
+    mtfree(p);
+    mtfree(dest);
+}
+
+void test_mttranspose_single_element(void)
+{
+    Matrix *p = FILL(mtalloc(1, 1), 1);
+    Matrix *dest = mtalloc(1, 1);
+
+    Matrix *result = mttranspose(p, dest);
+
+    TEST_ASSERT_NOT_NULL(result);
+    TEST_ASSERT_EQUAL_DOUBLE(1.0, ENTRY(dest, 0, 0));
+
+    mtfree(p);
+    mtfree(dest);
+}
+
 int main()
 {
     UNITY_BEGIN();
@@ -351,5 +415,9 @@ int main()
     RUN_TEST(test_mtapply_valid);
     RUN_TEST(test_mtapply_incompatible);
     RUN_TEST(test_mtmult_null);
+    RUN_TEST(test_mttranspose_valid);
+    RUN_TEST(test_mttranspose_incompatible);
+    RUN_TEST(test_mttranspose_square_matrix);
+    RUN_TEST(test_mttranspose_single_element);
     return UNITY_END();
 }
