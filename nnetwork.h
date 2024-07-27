@@ -3,7 +3,7 @@
 
 typedef struct {
     double (*f)(double); /* activation function */
-    double (*fprime)(double); /* activation function derivative */
+    double (*fprime)(double); /* activation function derivative, it'll be fed f's output as its input */
 } Activation;
 
 typedef struct {
@@ -12,6 +12,17 @@ typedef struct {
     Matrix *biases;
     Activation *functions;
 } Nnet;
+
+typedef struct {
+    int size;
+    Matrix *inputs;
+    Matrix *targets;
+} Batch;
+
+typedef struct {
+    int nbatch;
+    Batch *batches;
+} Dataset;
 
 Nnet *nnetalloc(int input_size, int *layer_sizes, Activation *functions, int nlay);
 void nnetfree(Nnet *nnet);
