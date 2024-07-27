@@ -60,16 +60,18 @@ Matrix *predict(Nnet *nnet, Matrix *input, Matrix *dest)
         out = tmp;
     }
 
-    memcpy(dest->entries, preout->entries, preout->row);
+    memcpy(dest->entries, preout->entries, preout->row * sizeof(double));
     mtfree(preout);
     mtfree(out);
     return dest;
 }
 
-#define EPSILON 1e-3
+#define EPSILON 1e-8
 
-void train(Nnet *nnet, Matrix *inputs, Matrix *targets, int ndata, double learning_rate, Matrix *wgradients, Matrix *bgradients, Matrix *outputs)
+void train(Nnet *nnet, Batch *batch, double learning_rate, Matrix *wgradients, Matrix *bgradients, Matrix *outputs)
 {
+    Matrix *inputs = batch->inputs, *targets = batch->targets;
+    int ndata = batch->size;
     double losses[nnet->nlay];
     memset(losses, 0, sizeof(double) * nnet->nlay);
 
@@ -86,6 +88,8 @@ void train(Nnet *nnet, Matrix *inputs, Matrix *targets, int ndata, double learni
         Matrix *error = mtsubtract(&outputs[nnet->nlay - 1], &targets[i], mtalloc(outputs[nnet->nlay - 1].row, 1));
 
         for (int j = nnet->nlay - 1; j >= 0; j--) {
+            for (int k = 0; k < error->row; k++)
+                losses[j] += error->entries[k] * error->entries[k];
             Matrix *bgrad = mtapply(&outputs[j], nnet->functions[j].fprime, mtalloc(outputs[j].row, 1));
             mtscale(bgrad, 2, bgrad);
             mtelmult(bgrad, error, bgrad);
@@ -96,7 +100,7 @@ void train(Nnet *nnet, Matrix *inputs, Matrix *targets, int ndata, double learni
             if (j > 0) {
                 Matrix *wtranspose = mttranspose(&nnet->weights[j], mtalloc(nnet->weights[j].col, nnet->weights[j].row));
                 error->row = wtranspose->row;
-                error->entries = realloc(error->entries, error->row);
+                error->entries = realloc(error->entries, error->row * sizeof(double));
                 mtmult(wtranspose, bgrad, error);
                 mtfree(wtranspose);
             }
@@ -112,10 +116,10 @@ void train(Nnet *nnet, Matrix *inputs, Matrix *targets, int ndata, double learni
     }
 
     for (int i = 0; i < nnet->nlay; i++) {
-        int bnormsq = 0; /* Frobenious norm of bias gradient squared */
+        double bnormsq = 0; /* Frobenious norm of bias gradient squared */
         for (int j = 0; j < bgradients[i].row; j++)
             bnormsq += bgradients[i].entries[j] * bgradients[i].entries[j];
-        int wnormsq = 0; /* Frobenious norm of weight gradient squared */
+        double wnormsq = 0; /* Frobenious norm of weight gradient squared */
         for (int j = 0; j < nnet->weights[i].row * nnet->weights[i].col; j++)
             wnormsq += wgradients[i].entries[j] * wgradients[i].entries[j];
         double coefficient = losses[i] / (bnormsq + wnormsq + EPSILON) * learning_rate;
@@ -125,5 +129,48 @@ void train(Nnet *nnet, Matrix *inputs, Matrix *targets, int ndata, double learni
         mtscale(&wgradients[i], coefficient, &wgradients[i]);
         mtsubtract(&nnet->weights[i], &wgradients[i], &nnet->weights[i]); 
         memset(wgradients[i].entries, 0, wgradients[i].row * wgradients[i].col);
+    }
+}
+
+void shuffle(int v[], int len)
+{
+    for (int i = 0; i < len; i++) {
+        int randi = rand() % len;
+        int tmp = v[i];
+        v[i] = v[randi];
+        v[randi] = tmp;
+    }
+}
+
+void stochastic_train(Nnet *nnet, Dataset *dataset, int epoches, double learning_rate)
+{
+    Matrix wgradients[nnet->nlay], bgradients[nnet->nlay], outputs[nnet->nlay];
+
+    for (int i = 0; i < nnet->nlay; i++) {
+        wgradients[i].row = nnet->weights[i].row;
+        wgradients[i].col = nnet->weights[i].col;
+        wgradients[i].entries = calloc(wgradients[i].row * wgradients[i].col, sizeof(double));
+        bgradients[i].row = nnet->biases[i].row;
+        bgradients[i].col = 1;
+        bgradients[i].entries = calloc(bgradients[i].row, sizeof(double));
+        outputs[i].row = bgradients[i].row;
+        outputs[i].col = 1;
+        outputs[i].entries = calloc(outputs[i].row, sizeof(double));
+    }
+
+    int indecies[dataset->nbatch];
+
+    for (int i = 0; i < dataset->nbatch; i++)
+        indecies[i] = i;
+    while (epoches-- > 0) {
+        shuffle(indecies, dataset->nbatch);
+        for (int i = 0; i < dataset->nbatch; i++)
+            train(nnet, &dataset->batches[indecies[i]], learning_rate, wgradients, bgradients, outputs);
+    }
+
+    for (int i = 0; i < nnet->nlay; i++) {
+        free(wgradients[i].entries);
+        free(bgradients[i].entries);
+        free(outputs[i].entries);
     }
 }
