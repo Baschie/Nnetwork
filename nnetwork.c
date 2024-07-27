@@ -24,6 +24,17 @@ Nnet *nnetalloc(int input_size, int *layer_sizes, Activation *functions, int nla
     return p;
 }
 
+void nnetfree(Nnet *nnet)
+{
+    for (int i = 0; i < nnet->nlay; i++) {
+        free(nnet->weights[i].entries);
+        free(nnet->biases[i].entries);
+    }
+    free(nnet->weights);
+    free(nnet->biases);
+    free(nnet);
+}
+
 void init(Matrix *v)
 {
     double limit = sqrt(3.0 / v->col);
