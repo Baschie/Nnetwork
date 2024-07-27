@@ -16,6 +16,7 @@ Nnet *nnetalloc(int input_size, int *layer_sizes, Activation *functions, int nla
         p->weights[i].entries = malloc(sizeof(double) * p->weights[i].row * p->weights[i].col);
         p->biases[i].row = p->weights[i].row;
         p->biases[i].col = 1;
+        p->biases[i].entries = malloc(sizeof(double) * p->biases[i].row);
         init(&p->weights[i]);
         init(&p->biases[i]);
     }
