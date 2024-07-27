@@ -14,4 +14,6 @@ typedef struct {
 } Nnet;
 
 Nnet *nnetalloc(int input_size, int *layer_sizes, Activation *functions, int nlay);
+void nnetfree(Nnet *nnet);
 void init(Matrix *v);
+Matrix *predict(Nnet *nnet, Matrix *input, Matrix *dest);

@@ -42,3 +42,26 @@ void init(Matrix *v)
     for (int i = 0; i < v->row * v->col; i++)
         v->entries[i] = rand() * limit * 2 / RAND_MAX - limit;
 }
+
+Matrix *predict(Nnet *nnet, Matrix *input, Matrix *dest)
+{
+    Matrix *preout = mtalloc(input->row, 1);
+    memcpy(preout->entries, input->entries, sizeof(double) * input->row);
+    Matrix *out = mtalloc(nnet->weights[0].row, 1);
+
+    for (int i = 0; i < nnet->nlay; i++) {
+        out->row = nnet->weights[i].row;
+        out->entries = realloc(out->entries, sizeof(double) * out->row);
+        mtmult(nnet->weights + i, preout, out);
+        mtadd(nnet->biases + i, out, out);
+        mtapply(out, nnet->functions[i].f, out);
+        Matrix *tmp = preout;
+        preout = out;
+        out = tmp;
+    }
+
+    memcpy(dest->entries, preout->entries, preout->row);
+    mtfree(preout);
+    mtfree(out);
+    return dest;
+}
