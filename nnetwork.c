@@ -66,7 +66,12 @@ Matrix *predict(Nnet *nnet, Matrix *input, Matrix *dest)
     return dest;
 }
 
-#define EPSILON 1e-8
+static double epsilon = 1e-8; /* small value to prevent division by zero */
+
+void set_epsilon(double x)
+{
+    epsilon = x;
+}
 
 void train(Nnet *nnet, Batch *batch, double learning_rate, Matrix *wgradients, Matrix *bgradients, Matrix *outputs)
 {
@@ -122,7 +127,7 @@ void train(Nnet *nnet, Batch *batch, double learning_rate, Matrix *wgradients, M
         double wnormsq = 0; /* Frobenious norm of weight gradient squared */
         for (int j = 0; j < nnet->weights[i].row * nnet->weights[i].col; j++)
             wnormsq += wgradients[i].entries[j] * wgradients[i].entries[j];
-        double coefficient = losses[i] / ndata / (bnormsq + wnormsq + EPSILON) * learning_rate;
+        double coefficient = losses[i] / ndata / (bnormsq + wnormsq + epsilon) * learning_rate;
         mtscale(&bgradients[i], coefficient, &bgradients[i]);
         mtsubtract(&nnet->biases[i], &bgradients[i], &nnet->biases[i]);
         memset(bgradients[i].entries, 0, bgradients[i].row * sizeof(double));
