@@ -31,16 +31,20 @@ void test_mtsave_mtload(void)
     Matrix *p = mtalloc(rand()%100, rand()%100);
     for (int i = 0; i < p->col * p->row; i++)
         p->entries[i] = rand() * 10.0 / RAND_MAX;
-    int result = mtsave(p, "test.txt");
+    FILE *fp = fopen("test.txt", "wb");
+    int result = mtsave(p, fp);
+    fclose(fp);
     TEST_ASSERT(result == 0);
-    Matrix *loaded = mtload("test.txt");
+    fp = fopen("test.txt", "rb");
+    Matrix *loaded = mtload(&(Matrix) {}, fp);
+    fclose(fp);
     TEST_ASSERT(loaded != NULL);
-    TEST_ASSERT_EQUAL_INT16(p->row, loaded->row);
-    TEST_ASSERT_EQUAL_INT16(p->col, loaded->col);
+    TEST_ASSERT_EQUAL_INT(p->row, loaded->row);
+    TEST_ASSERT_EQUAL_INT(p->col, loaded->col);
     for (int i = 0; i < p->col * p->row; i++)
         TEST_ASSERT_EQUAL_DOUBLE(p->entries[i], loaded->entries[i]);
     mtfree(p);
-    mtfree(loaded);
+    free(loaded->entries);
 }
 
 void test_mtadd_valid(void)

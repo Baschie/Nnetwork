@@ -34,52 +34,55 @@ void mtfree(Matrix *p)
     free(p);
 }
 
-int mtsave(Matrix *p, const char *path)
+int mtsave(Matrix *p, FILE *fp)
 {
-    FILE *fp = fopen(path, "wb");
-
-    if (fp == NULL)
+    if (p == NULL) {
+        fprintf(stderr, "%s(%p, %p): Null matrix\n", __func__, p, fp);
+        mterrno |= MT_ERR_NULL_MATRIX;
         return -1;
-    if (fwrite(&p->row, sizeof(int), 1, fp) != 1)
-        goto error;
-    if (fwrite(&p->col, sizeof(int), 1, fp) != 1)
-        goto error;
-    if (fwrite(p->entries, sizeof(double), p->row * p->col, fp) != p->row * p->col)
-        goto error;
+    }
+    if (fp == NULL) {
+        fprintf(stderr, "%s(%p, %p): Null file pointer\n", __func__, p, fp);
+        mterrno |= MT_ERR_NULL_FP;
+        return -1;
+    }
+    if (fwrite(&p->row, sizeof(int), 1, fp) != 1 ||
+        fwrite(&p->col, sizeof(int), 1, fp) != 1 ||
+        fwrite(p->entries, sizeof(double), p->row * p->col, fp) != p->row * p->col) {
+        fprintf(stderr, "%s(%p, %p): Failed to save matrix\n", __func__, p, fp);
+        mterrno |= MT_ERR_FILE_IO;
+        return -1;
+    }
     
-    fclose(fp);
     return 0;
-
-    error:
-    fclose(fp);
-    return -2;
 }
 
-Matrix *mtload(const char *path)
+Matrix *mtload(Matrix *dest, FILE *fp) /* Do not allocate memory for dest's entries */
 {
-    FILE *fp = fopen(path, "rb");
-    int row, col;
-
-    if (fp == NULL)
+    if (fp == NULL) {
+        fprintf(stderr, "%s(%p, %p): Null file pointer\n", __func__, dest, fp);
+        mterrno |= MT_ERR_NULL_FP;
         return NULL;
-    if (fread(&row, sizeof(int), 1, fp) != 1)
-        goto error0;
-    if (fread(&col, sizeof(int), 1, fp) != 1)
-        goto error0;
-    Matrix *p = mtalloc(row, col);
+    }
+    if (dest == NULL) {
+        fprintf(stderr, "%s(%p, %p): Null matrix\n", __func__, dest, fp);
+        mterrno |= MT_ERR_NULL_MATRIX;
+        return NULL;
+    }
+    if (fread(&dest->row, sizeof(int), 1, fp) != 1 ||
+        fread(&dest->col, sizeof(int), 1, fp) != 1) {
+        fprintf(stderr, "%s(%p, %p): Failed to read row/col\n", __func__, dest, fp);
+        mterrno |= MT_ERR_FILE_IO;
+        return NULL;
+    }
+    dest->entries = malloc(sizeof(double) * dest->col * dest->row);
+    if (fread(dest->entries, sizeof(double), dest->row * dest->col, fp) != dest->row * dest->col) {
+        fprintf(stderr, "%s(%p, %p): Failed to read all entries of matrix\n", __func__, dest, fp);
+        mterrno |= MT_ERR_FILE_IO;
+        return NULL;
+    }
 
-    if (fread(p->entries, sizeof(double), row * col, fp) != row * col)
-        goto error1;
-    fclose(fp);
-    return p;
-
-    error0:
-    fclose(fp);
-    return NULL;
-    error1:
-    fclose(fp);
-    mtfree(p);
-    return NULL;
+    return dest;
 }
 
 Matrix *mtadd(Matrix *p, Matrix *q, Matrix *dest)
