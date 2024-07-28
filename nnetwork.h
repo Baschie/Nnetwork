@@ -29,3 +29,4 @@ void nnetfree(Nnet *nnet);
 void init(Matrix *v);
 Matrix *predict(Nnet *nnet, Matrix *input, Matrix *dest);
 void stochastic_train(Nnet *nnet, Dataset *dataset, int epoches, double learning_rate);
+double accuracy(Nnet *nnet, Dataset *dataset, double (*interpret)(Matrix *));

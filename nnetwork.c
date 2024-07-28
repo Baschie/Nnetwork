@@ -122,7 +122,7 @@ void train(Nnet *nnet, Batch *batch, double learning_rate, Matrix *wgradients, M
         double wnormsq = 0; /* Frobenious norm of weight gradient squared */
         for (int j = 0; j < nnet->weights[i].row * nnet->weights[i].col; j++)
             wnormsq += wgradients[i].entries[j] * wgradients[i].entries[j];
-        double coefficient = losses[i] / (bnormsq + wnormsq + EPSILON) * learning_rate;
+        double coefficient = losses[i] / ndata / (bnormsq + wnormsq + EPSILON) * learning_rate;
         mtscale(&bgradients[i], coefficient, &bgradients[i]);
         mtsubtract(&nnet->biases[i], &bgradients[i], &nnet->biases[i]);
         memset(bgradients[i].entries, 0, bgradients[i].row * sizeof(double));
@@ -173,4 +173,18 @@ void stochastic_train(Nnet *nnet, Dataset *dataset, int epoches, double learning
         free(bgradients[i].entries);
         free(outputs[i].entries);
     }
+}
+
+double accuracy(Nnet *nnet, Dataset *dataset, double (*interpret)(Matrix *))
+{
+    int correct = 0;
+    Matrix *prediction = mtalloc(dataset->batches->targets->row, 1);
+    for (int i = 0; i < dataset->nbatch; i++)
+        for (int j = 0; j < dataset->batches->size; j++) {
+            predict(nnet, &dataset->batches[i].inputs[j], prediction);
+            if (interpret(prediction) == interpret(&dataset->batches[i].targets[j]))
+                correct++;
+        }
+    mtfree(prediction);
+    return correct * 100.0 / dataset->nbatch / dataset->batches->size;
 }
