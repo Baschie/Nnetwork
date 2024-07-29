@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <unistd.h>
 #include "nnetwork.h"
 #include "reader.h"
 
@@ -17,13 +18,18 @@ double interpert_mnist(Matrix *v);
 int main()
 {
     srand(time(NULL));
-    Dataset *trainset = read(TRAINIMAGES, TRAINLABELS, 0, 60000, 100);
-    Dataset *testset = read(TESTIMAGES, TESTLABELS, 0, 10000, 10000);
+    Dataset *trainset = readmnist(TRAINIMAGES, TRAINLABELS, 0, 60000, 100);
+    Dataset *testset = readmnist(TESTIMAGES, TESTLABELS, 0, 10000, 10000);
     Activation activatoin = {sigmoid, sigmoid_derivative};
-    Nnet *mnistnet = nnetalloc(28 * 28, (int []) {196, 10},  (Activation []) {activatoin, activatoin}, 2);
+    Nnet *mnistnet;
+    if (!access("mnist.nnet", F_OK))
+        mnistnet = nnetload("mnist.nnet", (Activation []) {activatoin, activatoin});
+    else
+        mnistnet = nnetalloc(28 * 28, (int []) {196, 10},  (Activation []) {activatoin, activatoin}, 2);
     printf("Initial accurecy: %lf%%\n", accuracy(mnistnet, testset, interpert_mnist));
-    stochastic_train(mnistnet, trainset, 10, 0.05);
+    stochastic_train(mnistnet, trainset, 1, 0.05);
     printf("Final accuracy: %lf%%\n", accuracy(mnistnet, testset, interpert_mnist));
+    nnetsave(mnistnet, "mnist.nnet");
 }
 
 double sigmoid(double x)

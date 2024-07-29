@@ -17,7 +17,7 @@ double *target_entries[] = {(double []) {1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     (double []) {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
     (double []) {0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
 
-Dataset *read(const char *image_path, const char *label_path, int offset, int limit, int batch_size)
+Dataset *readmnist(const char *image_path, const char *label_path, int offset, int limit, int batch_size)
 {
     int c;
     FILE *imagefp, *labelfp;
