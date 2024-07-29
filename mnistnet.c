@@ -4,6 +4,7 @@
 #include <math.h>
 #include <unistd.h>
 #include "nnetwork.h"
+#include "matrix.h"
 #include "reader.h"
 
 #define TRAINIMAGES "archive/train-images.idx3-ubyte"
