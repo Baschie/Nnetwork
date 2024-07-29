@@ -31,3 +31,5 @@ Matrix *predict(Nnet *nnet, Matrix *input, Matrix *dest);
 void set_epsilon(double x);
 void stochastic_train(Nnet *nnet, Dataset *dataset, int epoches, double learning_rate);
 double accuracy(Nnet *nnet, Dataset *dataset, double (*interpret)(Matrix *));
+void nnetsave(Nnet *nnet, const char *path);
+Nnet *nnetload(const char *path, Activation *functions);

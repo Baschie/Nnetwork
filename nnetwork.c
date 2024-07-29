@@ -193,3 +193,82 @@ double accuracy(Nnet *nnet, Dataset *dataset, double (*interpret)(Matrix *))
     mtfree(prediction);
     return correct * 100.0 / dataset->nbatch / dataset->batches->size;
 }
+
+const uint32_t nnetmn = 0x0AAF;
+
+void nnetsave(Nnet *nnet, const char *path)
+{
+    FILE *fp = fopen(path, "wb");
+    if (fp == NULL) {
+        fprintf(stderr, "%s(%p, %s): Failed to open file\n", __func__, nnet, path);
+        exit(EXIT_FAILURE);
+    }
+    if (fwrite(&nnetmn, sizeof(uint32_t), 1, fp) != 1) {
+        fprintf(stderr, "%s(%p, %s): Failed to store the magic number\n", __func__, nnet, path);
+    }
+    if (fwrite(&nnet->nlay, sizeof(int), 1, fp) != 1) {
+        fprintf(stderr, "%s(%p, %s): Failed to store the number of layers\n", __func__, nnet, path);
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < nnet->nlay; i++) {
+        if (mtsave(&nnet->weights[i], fp)) {
+            fprintf(stderr, "%s(%p, %s): Failed to sotre the %d'th weight\n", __func__, nnet, path, i);
+            exit(EXIT_FAILURE);
+        }
+        if (mtsave(&nnet->biases[i], fp)) {
+            fprintf(stderr, "%s(%p, %s): Failed to store the %d'th bias \n", __func__, nnet, path, i);
+            exit(EXIT_FAILURE);
+        }
+    }
+    fclose(fp);
+}
+
+Nnet *nnetload(const char *path, Activation *functions)
+{
+    Nnet *nnet = calloc(1, sizeof(Nnet));
+    nnet->functions = functions;
+    FILE *fp = fopen(path, "rb");
+    if (fp == NULL) {
+        fprintf(stderr, "%s(%s, %p): Failed to open file\n", __func__, path, functions);
+        goto failure;
+    }
+    uint32_t check;
+    if (fread(&check, sizeof(uint32_t), 1, fp) != 1) {
+        fprintf(stderr, "%s(%s, %p): Failed to read magic number\n", __func__, path, functions);
+        goto failure;
+    }
+    if (check != nnetmn) {
+        fprintf(stderr, "%s(%s, %p): File doesn't seem to contain a nnetwork\n", __func__, path, functions);
+        goto failure;
+    }
+    if (fread(&nnet->nlay, sizeof(int), 1, fp) != 1) {
+        fprintf(stderr, "%s(%s, %p): Failed to read the number of layers\n", __func__, path, functions);
+        goto failure;
+    }
+    nnet->weights = calloc(nnet->nlay, sizeof(Matrix));
+    nnet->biases = calloc(nnet->nlay, sizeof(Matrix));
+    for (int i = 0; i < nnet->nlay; i++) {
+        if (mtload(&nnet->weights[i], fp) == NULL) {
+            fprintf(stderr, "%s(%s, %p): Failed to read %d'th weight\n", __func__, path, functions, i);
+            goto failure;
+        }
+        if (mtload(&nnet->biases[i], fp) == NULL) {
+            fprintf(stderr, "%s(%s, %p): Failed to read %d'th bias\n", __func__, path, functions, i);
+            goto failure;
+        }
+    }
+    fclose(fp);
+    return nnet;
+
+    failure:
+    if (nnet->weights) 
+        for (int i = 0; i < nnet->nlay; i++) {
+            free(nnet->weights[i].entries);
+            free(nnet->biases[i].entries);
+        }
+    free(nnet->weights);
+    free(nnet->biases);
+    free(nnet);
+    fclose(fp);
+    return NULL;
+}
