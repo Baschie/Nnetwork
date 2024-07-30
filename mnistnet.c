@@ -28,6 +28,7 @@ int main()
     else
         mnistnet = nnetalloc(28 * 28, (int []) {196, 10},  (Activation []) {activatoin, activatoin}, 2);
     printf("Initial accurecy: %lf%%\n", accuracy(mnistnet, testset, interpert_mnist));
+    set_epsilon(1e-5);
     stochastic_train(mnistnet, trainset, 1, 0.05);
     printf("Final accuracy: %lf%%\n", accuracy(mnistnet, testset, interpert_mnist));
     nnetsave(mnistnet, "mnist.nnet");
